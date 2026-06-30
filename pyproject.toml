@@ -1,0 +1,33 @@
+[project]
+name = "rl-gridworld"
+version = "0.1.0"
+description = "A clean implementation and demonstration of foundational Reinforcement Learning algorithms in a Grid-World environment. Perfect for beginners."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.11.0",
+    "numpy>=2.4.6",
+    "pyqt6>=6.11.0",
+]
+
+[project.scripts]
+rl-gridworld = "rl_gridworld.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rl_gridworld"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+src = ["src", "tests"]
