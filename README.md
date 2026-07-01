@@ -29,13 +29,16 @@ src/rl_gridworld/
 │   ├── dp/       有模型 (动态规划): value_iteration ...
 │   ├── mc/       蒙特卡洛
 │   └── td/       时序差分: sarsa / q_learning ...
-├── gui/        可视化: ascii (终端) / plots (matplotlib) / qt_view (待实现)
+├── gui/        可视化: ascii (终端) / plots (matplotlib)
 └── cli.py      入口, 把环境 + 算法 + 可视化粘起来
 tests/          单元测试
 ```
 
-设计约定：依赖方向单向为 `gui → agents → core → env`。所有算法的输出都对齐到
-`core.types.Policy`，因此可视化层用同一套代码即可渲染任意算法的结果，方便横向对比。
+设计约定：`env` 定义环境模型，`core` 定义算法和可视化共享的数据类型，
+`agents` 只负责求解环境并输出 `core.types.Policy`，`gui` 只负责渲染这些公共类型，
+`cli` 负责把环境、算法和可视化粘起来。因此新增算法时，通常不需要改可视化代码。
+
+更详细的结构说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 已实现算法
 
