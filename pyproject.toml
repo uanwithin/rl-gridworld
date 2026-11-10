@@ -1,7 +1,7 @@
 [project]
 name = "rl-gridworld"
 version = "0.1.0"
-description = "A clean implementation and demonstration of foundational Reinforcement Learning algorithms in a Grid-World environment. Perfect for beginners."
+description = "A clean implementation of foundational RL algorithms in GridWorld."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -28,6 +28,9 @@ packages = ["src/rl_gridworld"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 
-[tool.ruff]
-src = ["src", "tests"]
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]

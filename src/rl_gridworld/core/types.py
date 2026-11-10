@@ -1,11 +1,11 @@
 """RL 的公共数据类型。
 
-所有算法的输入/输出都对齐到这里定义的 Policy / ValueFunction /
-ActionValueFunction。可视化层只认这些类型，因此任意算法的结果都能用同一套
+所有算法的输出都对齐到这里定义的 Solution (Policy / ValueFunction /
+ActionValueFunction)。可视化层只认这些类型，因此任意算法的结果都能用同一套
 代码画出来，方便横向对比。
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -59,3 +59,16 @@ class ActionValueFunction:
         return Policy.greedy_from_actions(
             self.values.argmax(axis=1), self.values.shape[1]
         )
+
+
+@dataclass
+class Solution:
+    """一次求解的结果。不同算法填充不同字段，可视化按需取用。"""
+
+    policy: Policy
+    V: ValueFunction | None = None
+    Q: ActionValueFunction | None = None
+    # DP 算法是迭代轮数，model-free 算法是 episode 数
+    n_iters: int = 0
+    # 每个 episode 的累计回报，用来画学习曲线
+    returns: list[float] = field(default_factory=list)

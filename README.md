@@ -22,10 +22,10 @@ uv run rl-gridworld value_iteration --gamma 0.9 --no-plot
 
 ```
 src/rl_gridworld/
-├── env/        环境: GridWorld (确定性 MDP, P / R / next_states)
-├── core/       RL 公共抽象: Policy / ValueFunction / ActionValueFunction
+├── env/        环境: GridWorld (确定性 MDP, 可自定义地图, 提供 P / R / next_states)
+├── core/       RL 公共类型: Policy / ValueFunction / ActionValueFunction / Solution
 ├── agents/     算法, 按家族分组
-│   ├── base.py   Agent 抽象基类: solve(env) -> Policy
+│   ├── base.py   Agent 抽象基类: solve(env) -> Solution
 │   ├── dp/       有模型 (动态规划): value_iteration ...
 │   ├── mc/       蒙特卡洛
 │   └── td/       时序差分: sarsa / q_learning ...
@@ -35,7 +35,7 @@ tests/          单元测试
 ```
 
 设计约定：`env` 定义环境模型，`core` 定义算法和可视化共享的数据类型，
-`agents` 只负责求解环境并输出 `core.types.Policy`，`gui` 只负责渲染这些公共类型，
+`agents` 只负责求解环境并输出 `core.types.Solution`，`gui` 只负责渲染这些公共类型，
 `cli` 负责把环境、算法和可视化粘起来。因此新增算法时，通常不需要改可视化代码。
 
 更详细的结构说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
@@ -51,8 +51,19 @@ tests/          单元测试
 ## 新增一个算法
 
 1. 在对应家族目录 (如 `agents/td/`) 新建文件，继承 `Agent` 并实现 `solve`。
-2. 在 `cli.py` 的 `ALGORITHMS` 注册表里登记。
-3. 输出 `Policy`（如有需要也填充 `self.V` / `self.Q`）即可直接被可视化。
+2. `solve` 返回 `Solution`：至少填 `policy`，有的话再填 `V` / `Q` / `n_iters` / `returns`。
+3. 在 `cli.py` 的 `ALGORITHMS` 注册表里登记一个构造函数，结果就能直接被可视化。
+
+## 自定义地图
+
+```python
+from rl_gridworld.env import GridWorld, Rewards
+
+env = GridWorld(
+    rows=4, cols=6, target=(3, 5), forbidden=((1, 1), (2, 3)),
+    rewards=Rewards(forbidden=-10.0),
+)
+```
 
 ## 开发
 
