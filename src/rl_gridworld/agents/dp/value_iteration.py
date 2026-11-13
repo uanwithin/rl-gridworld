@@ -10,6 +10,7 @@ import warnings
 import numpy as np
 
 from rl_gridworld.agents.base import Agent
+from rl_gridworld.agents.dp.policy_evaluation import q_from_v
 from rl_gridworld.core.types import ActionValueFunction, Solution, ValueFunction
 from rl_gridworld.env.grid_world import GridWorld
 
@@ -22,15 +23,11 @@ class ValueIteration(Agent):
         self.theta = theta  # 收敛阈值
         self.max_iters = max_iters
 
-    def _q_from_v(self, env: GridWorld, v: np.ndarray) -> np.ndarray:
-        """由当前 v 计算 Q(s, a) = R(s,a) + γ Σ_s' P(s'|s,a) v(s')。"""
-        return env.R + self.gamma * env.P @ v
-
     def solve(self, env: GridWorld) -> Solution:
         v = np.zeros(env.n_states)
         n_iters = 0
         for n_iters in range(1, self.max_iters + 1):
-            v_new = self._q_from_v(env, v).max(axis=1)
+            v_new = q_from_v(env, v, self.gamma).max(axis=1)
             delta = np.abs(v_new - v).max()
             v = v_new
             if delta < self.theta:
@@ -40,7 +37,7 @@ class ValueIteration(Agent):
                 f"Value Iteration 在 {self.max_iters} 轮内未收敛", stacklevel=2
             )
 
-        Q = ActionValueFunction(self._q_from_v(env, v))
+        Q = ActionValueFunction(q_from_v(env, v, self.gamma))
         return Solution(
             policy=Q.greedy_policy(), V=ValueFunction(v), Q=Q, n_iters=n_iters
         )
