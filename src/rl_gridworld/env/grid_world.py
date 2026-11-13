@@ -78,7 +78,8 @@ class GridWorld:
         self.forbidden = tuple(forbidden)
         self.rewards = rewards
         self._validate()
-
+        # 总共三张表: next_states, R, P
+        #       next_states, R 在这个案例中都是固定的
         self.next_states = np.zeros((self.n_states, self.n_actions), dtype=int)
         self.R = np.zeros((self.n_states, self.n_actions))
         for s in range(self.n_states):
@@ -86,7 +87,7 @@ class GridWorld:
                 next_cell, reward = self._move(self.state_to_cell(s), a)
                 self.next_states[s, a] = self.cell_to_state(next_cell)
                 self.R[s, a] = reward
-
+        # P 是在 s 执行 a 后, 到达 s' 的概率, 由于这里是确定性环境, 所以只会有一个 s' 的概率为 1, 其它的都为0
         self.P = np.zeros((self.n_states, self.n_actions, self.n_states))
         s_idx, a_idx = np.indices(self.next_states.shape)
         self.P[s_idx, a_idx, self.next_states] = 1.0
@@ -111,10 +112,15 @@ class GridWorld:
         r, c = cell
         return r * self.cols + c
 
+    # 这个很关键,一个step的结果是 s,r,一定要注意到!
     def step(self, s: int, a: int) -> tuple[int, float]:
         """在状态 s 执行动作 a，返回 (下一状态, 奖励)。"""
         return int(self.next_states[s, a]), float(self.R[s, a])
 
+    # 这个 move 和 step 的区别是什么呢?
+    # _move 定义规则, step 查表
+    # _move 只在创建环境时用来把规则展开成表, 之后算法都是通过 step 读这张表
+    # 之所以区分开,是为了对应两种环境的使用方式:有模型算法和无模型算法.
     def _move(self, cell: Cell, a: Action) -> tuple[Cell, float]:
         dr, dc = ACTION_DELTAS[a]
         nxt = (cell[0] + dr, cell[1] + dc)

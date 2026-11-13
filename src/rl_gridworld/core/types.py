@@ -45,6 +45,8 @@ class Policy:
 class ValueFunction:
     """状态价值 V(s)，(n_states,)。"""
 
+    # 这里自己有个误解的点，自己以为状态值是这一个状态的，实际并不是
+    # 表示的是：从 s 出发、按策略 π 行动，所能得到的折扣回报的期望
     values: np.ndarray
 
 
@@ -54,6 +56,8 @@ class ActionValueFunction:
 
     values: np.ndarray
 
+    # 动作值也一样
+    # 表示的是：第一步做 a，之后按策略 π 走
     def greedy_policy(self) -> Policy:
         """对 Q 取贪婪得到确定性策略。"""
         return Policy.greedy_from_actions(
