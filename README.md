@@ -16,6 +16,9 @@ uv run rl-gridworld
 
 # 指定算法与折扣因子，只在终端输出不弹窗
 uv run rl-gridworld value_iteration --gamma 0.9 --no-plot
+
+# 评估均匀随机策略（迭代法）；去掉 --no-plot 可显示价值和策略图
+uv run rl-gridworld policy_evaluation --gamma 0.9 --no-plot
 ```
 
 ## 目录结构
@@ -40,7 +43,7 @@ tests/          单元测试
 算法分两类：
 
 - **控制**：找出好的策略，如值迭代、策略迭代、蒙特卡洛、Sarsa、Q-learning。
-  写成继承 `Agent` 的类，`solve(env) -> Solution`，在 `cli.py` 注册后就能运行和可视化。
+  写成继承 `Agent` 的类，`solve(env) -> Solution`，在 `cli.py` 注册返回 `Solution` 的调用函数后就能运行和可视化。
 - **预测**：评估一个给定的策略，如策略评估、TD 状态值估计。
   写成函数 `(env, policy, gamma, ...) -> ValueFunction`，供控制算法调用，也在测试和实验里当基准。
 
@@ -50,7 +53,7 @@ tests/          单元测试
 
 ## 已实现算法
 
-- [ ] 策略评估 (`agents/dp`，预测)
+- [x] 策略评估 (`agents/dp`，预测)
 - [x] Value Iteration (`agents/dp`)
 - [ ] Policy Iteration / 截断策略迭代
 - [ ] Monte Carlo: MC Basic / Exploring Starts / ε-Greedy
@@ -65,7 +68,9 @@ tests/          单元测试
 2. `solve` 返回 `Solution`：至少填 `policy`，有的话再填 `V` / `Q` / `n_iters` / `returns`。
 3. 在 `cli.py` 的 `ALGORITHMS` 注册表里登记一个构造函数，结果就能直接被可视化。
 
-预测算法：在对应家族目录里写一个返回 `ValueFunction` 的函数，不在 `cli.py` 注册。
+预测算法：在对应家族目录里写一个返回 `ValueFunction` 的函数。需要命令行实验时，
+可在 `cli.py` 中包装成返回 `Solution` 的调用函数并注册；`policy_evaluation`
+已按此方式接入，默认评估均匀随机策略。
 测试里用 `evaluate_policy_exact` 的结果当标准答案。
 
 ## 自定义地图
