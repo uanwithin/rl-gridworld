@@ -25,9 +25,11 @@ def q_from_v(env: GridWorld, v: np.ndarray, gamma: float) -> np.ndarray:
     return env.R + gamma * env.P @ v
 
 
+# 在状态 (s) 按策略选动作后，下一步奖励的期望
+# 自己忘记了在评估策略时，用的就是即时奖励的期望
 def _policy_reward(env: GridWorld, policy: Policy) -> np.ndarray:
     """按策略加权的即时奖励 r_π(s) = Σ_a π(a|s) r(s,a)，(n_states,)。"""
-    raise NotImplementedError
+    return np.einsum("sa,sa->s", env.R, policy.probs)
 
 
 def _policy_transition(env: GridWorld, policy: Policy) -> np.ndarray:
@@ -35,14 +37,25 @@ def _policy_transition(env: GridWorld, policy: Policy) -> np.ndarray:
 
     每行是关于 s' 的概率分布，和为 1。
     """
-    raise NotImplementedError
+    return np.einsum("sat,sa->st", env.P, policy.probs)
 
 
+# evaluate：评估, policy：策略, exact：精确地
 def evaluate_policy_exact(
     env: GridWorld, policy: Policy, gamma: float
 ) -> ValueFunction:
     """解析解: 解线性方程组 (I - γ P_π) v = r_π。"""
-    raise NotImplementedError
+    r_pi = _policy_reward(env, policy)
+    p_pi = _policy_transition(env, policy)
+
+    # linear algebra
+    # 这里的 solve 就是在求解  A@X=C
+    values = np.linalg.solve(
+        np.eye(env.n_states) - gamma * p_pi,
+        r_pi,
+    )
+
+    return ValueFunction(values=values)
 
 
 def evaluate_policy_iterative(
@@ -59,4 +72,14 @@ def evaluate_policy_iterative(
     跑满 max_iters 时直接返回当前估计，不报警告：截断策略迭代就是靠很小的
     max_iters 只做有限步评估。
     """
-    raise NotImplementedError
+    # 这两个都是确定了的了
+    r_pi = _policy_reward(env, policy)
+    p_pi = _policy_transition(env, policy)
+    v = np.zeros(env.n_states) if v0 is None else v0.values.copy()
+    for i in range(max_iters):
+        v_new = r_pi + gamma * p_pi @ v
+        max_diff = np.max(np.abs(v_new - v))
+        v = v_new
+        if max_diff < theta:
+            break
+    return ValueFunction(values=v)
