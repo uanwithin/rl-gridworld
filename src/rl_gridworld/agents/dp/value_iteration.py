@@ -12,6 +12,7 @@ import numpy as np
 from rl_gridworld.agents.base import Agent
 from rl_gridworld.agents.dp.policy_evaluation import q_from_v
 from rl_gridworld.core.types import ActionValueFunction, Solution, ValueFunction
+from rl_gridworld.core.updates import UpdateCallback, notify
 from rl_gridworld.env.grid_world import GridWorld
 
 
@@ -23,12 +24,15 @@ class ValueIteration(Agent):
         self.theta = theta  # 收敛阈值
         self.max_iters = max_iters
 
-    def solve(self, env: GridWorld) -> Solution:
+    def solve(
+        self, env: GridWorld, on_update: UpdateCallback | None = None
+    ) -> Solution:
         v = np.zeros(env.n_states)
         n_iters = 0
         for n_iters in range(1, self.max_iters + 1):
             v_new = q_from_v(env, v, self.gamma).max(axis=1)
             delta = np.abs(v_new - v).max()
+            notify(on_update, n_iters, "价值更新", v, v_new)
             v = v_new
             if delta < self.theta:
                 break

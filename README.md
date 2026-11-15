@@ -24,6 +24,49 @@ uv run rl-gridworld policy_evaluation --gamma 0.9 --no-plot
 uv run rl-gridworld policy_iteration --gamma 0.9 --no-plot
 ```
 
+## 按键单步绘图
+
+```bash
+uv run rl-gridworld --step
+uv run rl-gridworld policy_iteration --step
+uv run rl-gridworld policy_evaluation --step --quiet
+```
+
+窗口初始显示第 0 轮（价值全为 0，策略均匀随机）。点击图窗使其获得键盘焦点后：
+
+- 空格、回车、右方向键或 `Next` 按钮：实际执行下一轮迭代。
+- `R` 或 `Reset` 按钮：回到初始状态。
+- 收敛或达到迭代上限后停止更新，可重置后重新观察。
+
+三个面板分别显示当前价值、本轮价值差值、当前策略；策略变化的格子用红框标记。
+策略迭代的一轮包含“准确评估 + 策略改进”，因此收敛前显示的价值是改进前策略的评估值。
+终端仍显示每轮具体变化，使用 `--quiet` 可隐藏明细。`--step` 不能与 `--no-plot` 同用。
+图窗使用英文标签，以避免系统缺少中文字体时出现方框。
+
+## 查看每轮更新
+
+默认在终端显示每轮更新：状态编号、坐标（从 0 开始）、价值旧值 → 新值、
+差值和最大变化。策略迭代分别显示评估与改进阶段，并列出动作概率变化。
+未变化的状态省略，整轮无变化时明确标注。图形窗口仍展示最终结果。
+
+```bash
+uv run rl-gridworld value_iteration --no-plot
+uv run rl-gridworld policy_iteration --no-plot
+# 仅查看最终结果
+uv run rl-gridworld --quiet --no-plot
+```
+
+Python 调用可传入 `on_update` 回调：
+
+```python
+updates = []
+solution = ValueIteration().solve(env, on_update=updates.append)
+```
+
+每条更新含 `iteration`、`phase`、`before`、`after`，数组为独立快照。
+`evaluate_policy_iterative` 和 `PolicyIteration.solve` 也支持此参数；
+截断策略迭代逐步报告内部评估更新。
+
 ## 目录结构
 
 ```

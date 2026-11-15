@@ -14,6 +14,7 @@
 import numpy as np
 
 from rl_gridworld.core.types import Policy, ValueFunction
+from rl_gridworld.core.updates import UpdateCallback, notify
 from rl_gridworld.env.grid_world import GridWorld
 
 
@@ -65,6 +66,7 @@ def evaluate_policy_iterative(
     theta: float = 1e-6,
     max_iters: int = 1000,
     v0: ValueFunction | None = None,
+    on_update: UpdateCallback | None = None,
 ) -> ValueFunction:
     """迭代解: 从 v0 (默认全 0) 出发反复执行 v <- r_π + γ P_π v，
     直到 max|v_new - v| < theta 或跑满 max_iters 轮。
@@ -79,6 +81,7 @@ def evaluate_policy_iterative(
     for i in range(max_iters):
         v_new = r_pi + gamma * p_pi @ v
         max_diff = np.max(np.abs(v_new - v))
+        notify(on_update, i + 1, "策略评估", v, v_new)
         v = v_new
         if max_diff < theta:
             break

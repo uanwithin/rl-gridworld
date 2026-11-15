@@ -27,8 +27,9 @@ def test_render_grid_marks_layout():
 def test_render_solution():
     env = build_gridworld()
     solution = ValueIteration().solve(env)
-    assert solution.V is not None
-    assert "10.00" in render_values(env, solution.V)
+    value = solution.V
+    assert value is not None
+    assert "10.00" in render_values(env, value)
     assert "↑" in render_policy(env, solution.policy)
 
 

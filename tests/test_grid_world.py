@@ -48,7 +48,7 @@ def test_actions_move_in_expected_direction():
         Action.STAY: (2, 3),
     }
     for a, cell in expected.items():
-        assert env.state_to_cell(env.step(s, a)[0]) == cell
+        assert env.state_to_cell(int(env.step(s, a)[0])) == cell
 
 
 def test_state_cell_roundtrip():

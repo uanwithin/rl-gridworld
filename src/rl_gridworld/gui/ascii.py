@@ -1,5 +1,8 @@
 """终端纯文本可视化。所有函数都返回字符串，由调用方决定是否打印。"""
 
+import numpy as np
+
+from rl_gridworld.core.updates import Update
 from rl_gridworld.core.types import Policy, ValueFunction
 from rl_gridworld.env.grid_world import Action, GridWorld
 
@@ -57,3 +60,40 @@ def render_policy(env: GridWorld, policy: Policy) -> str:
     """把每个状态的贪婪动作画成箭头。"""
     cells = [f" {ACTION_SYMBOLS[Action(a)]} " for a in policy.greedy_actions()]
     return _table(env, cells, width=3)
+
+
+def render_update(env: GridWorld, update: Update) -> str:
+    """列出实际发生变化的状态；坐标从 0 开始，保留微小收敛变化。"""
+    before, after = update.before, update.after
+    lines = [f"\n第 {update.iteration} 轮 · {update.phase}"]
+    if before.ndim == 1:
+        changed = np.flatnonzero(before != after)
+        lines.append(
+            f"价值变化：{len(changed)}/{env.n_states} 个状态，"
+            f"最大 |ΔV|={np.max(np.abs(after - before)):.9g}"
+        )
+        for state in changed:
+            lines.append(
+                f"  s={state} {env.state_to_cell(int(state))}: "
+                f"{before[state]:.9g} → {after[state]:.9g} "
+                f"(ΔV={after[state] - before[state]:+.9g})"
+            )
+    else:
+        changed = np.flatnonzero(np.any(before != after, axis=1))
+        lines.append(f"策略变化：{len(changed)}/{env.n_states} 个状态")
+
+        def describe(probs: np.ndarray) -> str:
+            return " ".join(
+                f"{ACTION_SYMBOLS[Action(a)]}:{p:.6g}"
+                for a, p in enumerate(probs)
+                if p > 0
+            )
+
+        for state in changed:
+            lines.append(
+                f"  s={state} {env.state_to_cell(int(state))}: "
+                f"[{describe(before[state])}] → [{describe(after[state])}]"
+            )
+    if not len(changed):
+        lines.append("  无变化")
+    return "\n".join(lines)

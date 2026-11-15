@@ -32,6 +32,7 @@ from rl_gridworld.agents.dp.policy_evaluation import (
     q_from_v,
 )
 from rl_gridworld.core.types import Policy, Solution, ValueFunction
+from rl_gridworld.core.updates import UpdateCallback, notify
 from rl_gridworld.env.grid_world import GridWorld
 
 
@@ -64,7 +65,9 @@ class PolicyIteration(Agent):
         self.eval_steps = eval_steps
         self.theta = theta
 
-    def solve(self, env: GridWorld) -> Solution:
+    def solve(
+        self, env: GridWorld, on_update: UpdateCallback | None = None
+    ) -> Solution:
         policy = Policy(probs=np.full((env.n_states, env.n_actions), 1 / env.n_actions))
         value = ValueFunction(values=np.zeros(env.n_states))
 
@@ -72,7 +75,9 @@ class PolicyIteration(Agent):
         #       更新方式：在每个状态，选择动作值最大的动作
         for i in range(self.max_iters):
             if self.eval_steps is None:
+                previous = value.values
                 value = evaluate_policy_exact(env, policy, self.gamma)
+                notify(on_update, i + 1, "策略评估（解析解）", previous, value.values)
             else:
                 # 内部策略评估：判断的是 v 是否接近于当前策略的 v
                 #    更新方式：按照固定策略(\pi)加权平均。
@@ -84,6 +89,13 @@ class PolicyIteration(Agent):
                     theta=0.0,  # 禁用内部提前停止，严格执行 eval_steps 次更新。
                     max_iters=self.eval_steps,
                     v0=value,
+                    on_update=lambda update: notify(
+                        on_update,
+                        i + 1,
+                        f"策略评估（内部第 {update.iteration} 步）",
+                        update.before,
+                        update.after,
+                    ),
                 )
             # 先执行当前动作 a，后续回报使用当前的 v 来估计！！！
             q = q_from_v(env, value.values, self.gamma)
@@ -91,6 +103,8 @@ class PolicyIteration(Agent):
             actions = np.argmax(q, axis=1)
             # 这个结果，就叫做：贝尔曼最优算子，它就是对当前 v 做一次价值迭代更新
             new_policy = Policy.greedy_from_actions(actions, env.n_actions)
+
+            notify(on_update, i + 1, "策略改进", policy.probs, new_policy.probs)
 
             if self.eval_steps is None:
                 if np.array_equal(new_policy.probs, policy.probs):
@@ -109,6 +123,14 @@ class PolicyIteration(Agent):
         # 普通模式：准确评估最后一次改进后的策略。
         # 截断模式：保留当前价值估计，不额外评估。
         if self.eval_steps is None:
+            previous = value.values
             value = evaluate_policy_exact(env, policy, self.gamma)
+            notify(
+                on_update,
+                self.max_iters,
+                "最终策略评估（解析解）",
+                previous,
+                value.values,
+            )
 
         return Solution(policy=policy, V=value, n_iters=self.max_iters)
