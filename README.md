@@ -19,6 +19,9 @@ uv run rl-gridworld value_iteration --gamma 0.9 --no-plot
 
 # 评估均匀随机策略（迭代法）；去掉 --no-plot 可显示价值和策略图
 uv run rl-gridworld policy_evaluation --gamma 0.9 --no-plot
+
+# 策略迭代：交替评估和改进策略
+uv run rl-gridworld policy_iteration --gamma 0.9 --no-plot
 ```
 
 ## 目录结构
@@ -55,7 +58,8 @@ tests/          单元测试
 
 - [x] 策略评估 (`agents/dp`，预测)
 - [x] Value Iteration (`agents/dp`)
-- [ ] Policy Iteration / 截断策略迭代
+- [x] Policy Iteration
+- [ ] 截断策略迭代
 - [ ] Monte Carlo: MC Basic / Exploring Starts / ε-Greedy
 - [ ] TD: 状态值估计 (预测) / Sarsa / n-step Sarsa / Q-learning
 - [ ] 价值函数近似 / 策略梯度

@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 import numpy as np
 
 from rl_gridworld.agents.dp.policy_evaluation import evaluate_policy_iterative
+from rl_gridworld.agents.dp.policy_iteration import PolicyIteration
 from rl_gridworld.agents.dp.value_iteration import ValueIteration
 from rl_gridworld.core.types import Policy, Solution
 from rl_gridworld.env.grid_world import GridWorld, build_gridworld
@@ -25,6 +26,7 @@ def _evaluate_uniform_policy(env: GridWorld, args: argparse.Namespace) -> Soluti
 ALGORITHMS: dict[str, Callable[[GridWorld, argparse.Namespace], Solution]] = {
     "value_iteration": lambda env, args: ValueIteration(gamma=args.gamma).solve(env),
     "policy_evaluation": _evaluate_uniform_policy,
+    "policy_iteration": lambda env, args: PolicyIteration(gamma=args.gamma).solve(env),
 }
 
 
@@ -54,9 +56,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         print("\n[policy_evaluation] 迭代法评估均匀随机策略")
     else:
         print(f"\n[{args.algo}] 迭代 {solution.n_iters} 次")
+
     if solution.V is not None:
         print("状态价值 V(s):")
         print(render_values(env, solution.V))
+
     if args.algo == "policy_evaluation":
         print(f"策略：每个状态下，各动作概率均为 {1 / env.n_actions:.0%}")
     else:
